@@ -1,11 +1,17 @@
 Lista på vad som behöver göras:
 		I terminalen/consolen:
-  - VIKTIGT: Main-loop till spelet
+  - Main-loop till spelet
   		initierar charactär och spel osv
-  		loopar:
-  			check_events
+  		loop:
+  			[check_events
   			print_maze
-  			updatera viktig information så som items osv
+  			updatera viktig information så som items osv]
+  - rendering ska bara göras inom konsolens boundaries med centrering på spelarens karakrät väldigt koolt resultat + att det inte är jättesvårt att fixa
+        > vi måste ta reda på hur c++ kan veta dimmensionerna av consolefönstret
+            lägga till dimensionerna i init i 2 medlemsvariabler
+        > ändra i Maze::print_maze(std::string file=""); så att den bara skriver ut en viss del av labyrinten
+            Annvända SMALL_RECT i Linux/Linux.h och mata in i Maze::print_maze
+            skapa en funktion i game som genererar detta SMALL_RECT objektet.
   - karaktärens egenskaper/properties i klass-filen
   		position
   		TECKEN
@@ -15,7 +21,14 @@ Lista på vad som behöver göras:
   		WALK_RIGHT
   		PICKUP
   - hinder och items
-  		Coins
+        pickups:
+      		Coins
+            keys
+        obsticles:
+            doors
+  Kan du tänka dig denna uppgift? - Förflyttning och events som händer under spelets gång
+  		Karakrären vill flytta sig
+  		karakrären är framme vid målet
 
   - En storyline??? - kanske
 
