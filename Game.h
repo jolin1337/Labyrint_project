@@ -16,9 +16,11 @@ private:
 	Game(int w, int h);
 	~Game();
 	void init();
+    void createObstacles();
 	bool isPlaying() const;
     void checkEvents();
 	void printMaze();
+    
     std::vector<Obstacle *> obst;
 
 protected:

@@ -39,6 +39,7 @@ private:
 
 void Sleep(float ms);
 bool GetAsyncKeyState(int key);
+void getDimensions(int *w, int *h);
 #define VK_UP "\033[A"    // W-key
 #define VK_LEFT "\033[D"  // A-key
 #define VK_DOWN "\033[B"  // S-key

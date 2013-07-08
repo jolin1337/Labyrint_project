@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include "Linux.h"
 
 keyboard::keyboard() {
@@ -64,4 +65,29 @@ bool GetAsyncKeyState(int key){
 		return ret == key;
 	}
 	return false;
+}
+
+void getDimensions(int *w, int *h){
+    int width, height;
+#ifdef TIOCGSIZE
+	struct ttysize ts;
+	ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
+	width = ts.ts_cols;
+	height = ts.ts_lines;
+#elif defined(TIOCGWINSZ)
+	struct winsize ts;
+	ioctl(STDIN_FILENO, TIOCGWINSZ, &ts);
+	width = ts.ws_col;
+	height = ts.ws_row;
+#else
+    HANDLE console;
+	console = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+	GetConsoleScreenBufferInfo(console, &csbi);
+	width = 1 + csbi.srWindow.Right - csbi.srWindow.Left;
+	height = csbi.srWindow.Bottom - csbi.srWindow.Top;
+#endif 
+    *w = width;
+    *h = height;
 }

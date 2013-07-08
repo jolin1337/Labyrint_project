@@ -17,7 +17,7 @@ int main(int argc, char const *argv[])
 		std::cout << std::endl;
 		if (choice == "1"){ // play
 			std::cout 
-				<< "What dificulty would you play" << std::endl
+				<< "What difficulty would you play" << std::endl
 				<< "[1] -\t Easy" << std::endl
 				<< "[2] -\t Normal" << std::endl
 				<< "[3] -\t Hard" << std::endl;

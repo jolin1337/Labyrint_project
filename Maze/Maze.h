@@ -37,10 +37,12 @@ public:
 		return Map.size();
 	}
 	int Get_width(){
-		if(Map.size())
+		if(Get_height())
 			return Map[0].size();
 		return 0;
 	}
+    
+    int getPathLength();
 
 private:
 	// Pair<int, int> for the current cell

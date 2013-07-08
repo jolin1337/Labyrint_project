@@ -211,6 +211,16 @@ bool Maze::Solve(int x, int y){
 	return false;
 }
 
+int Maze::getPathLength(){
+    int len = 0;
+    for(int i=0;i<Get_width();i++)
+        for(int j=0;j<Get_height();j++){
+            if(Map[j][i] == SOLVEDPATH) // Check if m[j][i] is a part of the solution
+                len++;
+        }
+    return len;
+}
+
 bool Maze::Read_file(std::string file){
 	Map.clear(); // Make sure it's cleared
 	int j(0);

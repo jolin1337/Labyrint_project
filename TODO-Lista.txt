@@ -1,24 +1,15 @@
 Lista på vad som behöver göras:
 		I terminalen/consolen:
-  - Main-loop till spelet
-  		initierar charactär och spel osv
-  		loop:
-  			[check_events
-  			print_maze
-  			updatera viktig information så som items osv]
+
   - rendering ska bara göras inom konsolens boundaries med centrering på spelarens karakrät väldigt koolt resultat + att det inte är jättesvårt att fixa
-        > vi måste ta reda på hur c++ kan veta dimmensionerna av consolefönstret
+        > vi måste ta reda på hur c++ kan veta dimmensionerna av consolefönstret // Fixat i "ConsoleDimensions.cpp"
             lägga till dimensionerna i init i 2 medlemsvariabler
         > ändra i Maze::print_maze(std::string file=""); så att den bara skriver ut en viss del av labyrinten
             Annvända SMALL_RECT i Linux/Linux.h och mata in i Maze::print_maze
             skapa en funktion i game som genererar detta SMALL_RECT objektet.
+        > alternativt istället för att ändra Maze::print_maze skulle vi kunna göra en firend funktion som skriver ut labyrinten som vi vill ha den!
+  - Möjlighet att låsa upp dörren
   - karaktärens egenskaper/properties i klass-filen
-  		position
-  		TECKEN
-  		WALK_UP
-  		WALK_DOWN
-  		WALK_LEFT
-  		WALK_RIGHT
   		PICKUP
   - hinder och items
         pickups:
@@ -26,9 +17,6 @@ Lista på vad som behöver göras:
             keys
         obsticles:
             doors
-  Kan du tänka dig denna uppgift? - Förflyttning och events som händer under spelets gång
-  		Karakrären vill flytta sig
-  		karakrären är framme vid målet
 
   - En storyline??? - kanske
 
@@ -36,3 +24,17 @@ Lista på vad som behöver göras:
   - Design på labyrintens olika banor
   - modeller för de karaktärer som finns/ska finnas
   - tema och layout för menyer mm
+  
+  
+     ######## Completed ########
+- Main-loop till spelet
+  	initierar charactär och spel osv
+  	loop:
+  		[check_events
+  		print_maze
+  		updatera viktig information så som items osv]
+          
+- Förflyttning och events som händer under spelets gång
+      	Karakrären vill flytta sig
+  		karakrären är framme vid målet
+  
