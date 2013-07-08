@@ -11,10 +11,19 @@ void Character::addItem(Obstacle *item){
     items.push_back(item);
 }
 Obstacle *Character::destroyItem(int i){
-	if(i < 0 || i >= items.size()) return 0;
+    if(i < 0 || i >= items.size()) return 0;
 	Obstacle *destroying=items[i];
 	items.erase(items.begin()+i);
 	return destroying;
+}
+
+bool Character::near(int x, int y){
+	int marginal = 3;
+	if((this->x-x+1)*(this->x-x+1) + (this->y-y+1)*(this->y-y+1) < marginal*marginal)
+	// if(this->x > x - marginal && this->x < x + marginal &&
+	// 	this->y > y - marginal && this->y < y + marginal)
+		return true;
+    return false;
 }
 
 Character & Character::walkUp(){

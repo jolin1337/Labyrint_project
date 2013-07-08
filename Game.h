@@ -26,7 +26,7 @@ private:
 protected:
 	Game(){}
 	bool playing;
-	Maze maze;
+	Maze maze, printing_maze;
 	Character player;
 };
 

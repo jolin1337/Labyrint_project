@@ -12,10 +12,15 @@ const char Game::KEY=':', Game::DOOR='o'; // detta blir ett ö tillsammans, tyck
 //                fungerar F
 // Möjlig dörr:   fungerar E, 
 //                fungerar n,
-//     			  fungerar o
+//         		  fungerar o
 
 Game::Game(int w, int h):playing(false) {
 	maze.Create_maze(w,h);
+    printing_maze = maze;
+    for(int i=printing_maze.Get_height(); i > 0; i--)
+        for(int j=printing_maze.Get_width(); j > 0; j--)
+            printing_maze[i-1][j-1] = ' ';
+    
 }
 
 Game::~Game(){
@@ -39,7 +44,6 @@ void Game::createObstacles() {
 	Obstacle *door = new Door(-1,-1, DOOR), *key = new Key(-1,-1, KEY);
 	Obstacle::generateObstacle(solved, door, key);
 	
-		std::cout << door->getX() << "," << door->getY() << "\n";
 	if(door->getX() > -1 && door->getY() > -1 && key->getX() > -1 && key->getY() > -1){
 		((Door*)door)->id = ((Key*)key)->id = obst.size()+1;
 		obst.push_back(door);
@@ -132,16 +136,19 @@ void Game::checkEvents(){
 
 
 void Game::printMaze(){
+    for(int i=printing_maze.Get_height(); i > 0; i--)
+        for(int j=printing_maze.Get_width(); j > 0; j--)
+            if(player.near(j,i))
+                printing_maze[i-1][j-1] = maze[i-1][j-1];
 	if(!isPlaying()) return;
 	// sets obstacles position
-	Maze m = maze;
-	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++){
-		m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();
-	}
+	Maze m = printing_maze;
+	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++)
+        if(player.near((*it)->getX(), (*it)->getY()))
+    		m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();
 	
 	// sets the player position
 	m[player.getY()][player.getX()] = Character::TECKEN;
 	m.Print_maze();
-
 }
 

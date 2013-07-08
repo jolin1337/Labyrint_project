@@ -6,7 +6,7 @@
 class Character {
 public:
 
-	static const char TECKEN;
+    static const char TECKEN;
 	Character();
 	Character & walkUp();
 	Character & walkDown();
@@ -18,6 +18,7 @@ public:
     void addItem(Obstacle *item);
     Obstacle *destroyItem(int i);
     
+    bool near(int x, int y);
     
 private:
     std::vector<Obstacle *> items;
