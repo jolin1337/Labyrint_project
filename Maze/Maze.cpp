@@ -225,7 +225,7 @@ bool Maze::Read_file(std::string file){
 	Map.clear(); // Make sure it's cleared
 	int j(0);
 	std::string line;
-	std::ifstream infile(file); //  The input file
+	std::ifstream infile(file.c_str()); //  The input file
 	if (infile.is_open()) {		// Make sure the file is open
 	    while (!infile.eof()) {	// until we're at the end of the file
 	    	std::getline(infile, line);	// Take line by line

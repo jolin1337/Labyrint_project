@@ -4,7 +4,7 @@ HEADERS =       Maze/Maze.h   Inputs.h   Character.h   Game.h   Linux/Linux.h   
 all: maze_game
 
 maze_game: $(CPPS) $(HEADERS) 
-	g++ -std=c++11 -o maze_game $(CPPS)
+	g++ -o maze_game $(CPPS)
 
 run: 
 	./maze_game

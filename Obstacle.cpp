@@ -19,9 +19,10 @@ void Obstacle::generateObstacle(Maze solved, Obstacle *door, Obstacle *key){
     int posI = rand()%solved.getPathLength();            // posI är avståndet från slutet till den ända dörren
     int x = solved.Get_width()-2,y=solved.Get_height()-2;// end-positionen
     int prevDir = -1;                                   // denna finns för att förhindra att loopen går mot slutet istället för mot start
+    // generate door
     while(posI || 
-            !( ((solved[x+1][y] == Maze::WALL && solved[x-1][y] == Maze::WALL)
-               || (solved[x][y+1] == Maze::WALL && solved[x][y-1] == Maze::WALL))) ){   // stega igenom varje position tills vi hittat positionen med steglängd posI
+            !( ((solved[y+1][x] == Maze::WALL && solved[y-1][x] == Maze::WALL)
+               || (solved[y][x+1] == Maze::WALL && solved[y][x-1] == Maze::WALL))) ){   // stega igenom varje position tills vi hittat positionen med steglängd posI
         if(posI)
             posI--;
         if(solved[y][x+1] == Maze::SOLVEDPATH && prevDir != 0) {         // om lösningen går åt vänster
@@ -42,6 +43,7 @@ void Obstacle::generateObstacle(Maze solved, Obstacle *door, Obstacle *key){
         }
         else return;                                                     // annars är vi i startpositionen ...
     }
+    // generate key
     int xk = x, yk = y;
     while(1){
         if(solved[yk][xk+1] != Maze::SOLVEDPATH && solved[yk][xk+1] != Maze::WALL && prevDir != 0){

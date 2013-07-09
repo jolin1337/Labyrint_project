@@ -11,8 +11,12 @@ class Game {
 public:
     static void start(int w, int h);
 private:
-	static const char WALK_UP, WALK_DOWN, WALK_LEFT, WALK_RIGHT, PICKUP;
-	static const char KEY, DOOR;
+	enum Inputs{
+		WALK_UP='w', WALK_DOWN='s', WALK_LEFT='a', WALK_RIGHT='d', ACTION_BTN=VK_SPACEBAR,
+		KEY=':', DOOR='o'
+	};
+	// static const char WALK_UP, WALK_DOWN, WALK_LEFT, WALK_RIGHT, ACTION_BTN;
+	// static const char KEY, DOOR;
 	Game(int w, int h);
 	~Game();
 	void init();

@@ -6,28 +6,28 @@
 #else
 #include <conio.h>
 #endif
-const char Game::WALK_UP='w', Game::WALK_DOWN='s', Game::WALK_LEFT='a', Game::WALK_RIGHT='d', Game::PICKUP='?';
-const char Game::KEY=':', Game::DOOR='o'; // detta blir ett ö tillsammans, tyckte jag var fyndigt :D
+// const char Game::WALK_UP='w', Game::WALK_DOWN='s', Game::WALK_LEFT='a', Game::WALK_RIGHT='d', Game::ACTION_BTN=VK_SPACEBAR;
+// const char Game::KEY=':', Game::DOOR='o'; // detta blir ett ö tillsammans, tyckte jag var fyndigt :D
 // Möjlig nyckel: fungerar u, 
 //                fungerar F
 // Möjlig dörr:   fungerar E, 
 //                fungerar n,
-//         		  fungerar o
+//                   fungerar o
 
 Game::Game(int w, int h):playing(false) {
-	maze.Create_maze(w,h);
-    printing_maze = maze;
-    for(int i=printing_maze.Get_height(); i > 0; i--)
-        for(int j=printing_maze.Get_width(); j > 0; j--)
-            printing_maze[i-1][j-1] = ' ';
-    
+    maze.Create_maze(w,h);
+	printing_maze = maze;
+	for(int i=printing_maze.Get_height()-1; i > 1; i--)
+		for(int j=printing_maze.Get_width()-1; j > 1; j--)
+			printing_maze[i-1][j-1] = ' ';
+	
 }
 
 Game::~Game(){
 	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++)
 		delete *it;
 	Obstacle *ob;
-	while((ob = player.destroyItem(0)) != 0)
+	while((ob = player.destroyItem("key")) != 0)
 		delete ob;
 }
 
@@ -72,51 +72,53 @@ void Game::checkEvents(){
 #ifndef _WIN32
 	keyboard k;
 	int c = k.getch();			// väntar på input från playern
+	std::string all="";
+	all+=c;
 	while(k.kbhit())		// for clearing the buffer
-		k.getch();
+		all += k.getch();
 #else
 	int c = getch();    		// väntar på input från playern
+	std::string all="";
+	all+=c;
 	while(kbhit())		// for clearing the buffer
-		getch();
+		all += getch();
 #endif
 	try{
+		bool oneChar = all.size() == 1;
 		char pc;                        // position character (pc)
-		switch(c){
-			case 27:				// escape-key
-				playing = false;
-				break;
-			case WALK_UP:				// lower case
-			case WALK_UP - ('a'-'A'):	// upper case
-				pc = maze[player.getY()-1][player.getX()];
-				if(pc != Maze::WALL && pc != DOOR)
-					player.walkUp();			// y--
-				break;
-				
-			case WALK_DOWN:				// lower case
-			case WALK_DOWN - ('a'-'A'):	// upper case
-				pc = maze[player.getY()+1][player.getX()];
-				if(pc != Maze::WALL && pc != DOOR)
-					player.walkDown();		// y++
-				break;
-				
-			case WALK_RIGHT:				// lower case
-			case WALK_RIGHT - ('a'-'A'):	// upper case
-				pc = maze[player.getY()][player.getX()+1];
-				if(pc != Maze::WALL && pc != DOOR)
-					player.walkRight();		// x++
-				break;
-				
-			case WALK_LEFT:				// lower case
-			case WALK_LEFT - ('a'-'A'):	// upper case
-				pc = maze[player.getY()][player.getX()-1];
-				if(pc != Maze::WALL && pc != DOOR)
-					player.walkLeft();			// x--
-				break;
-			// ....
-			default:
-				//....
-				break;
+		if(oneChar && c == VK_ESCAPE)
+			playing = false;
+		else if(all == VK_UP || (oneChar && (c == WALK_UP || c == WALK_UP - ('a'-'A')))){
+			pc = maze[player.getY()-1][player.getX()];
+			if(pc != Maze::WALL && pc != DOOR)
+				player.walkUp();			// y--
 		}
+		else if(all == VK_DOWN || (oneChar && (c == WALK_DOWN || c == WALK_DOWN - ('a'-'A')))){
+			pc = maze[player.getY()+1][player.getX()];
+			if(pc != Maze::WALL && pc != DOOR)
+				player.walkDown();		// y++
+		}
+		else if(all == VK_RIGHT || (oneChar && (c == WALK_RIGHT || c == WALK_RIGHT - ('a'-'A')))){
+			pc = maze[player.getY()][player.getX()+1];
+			if(pc != Maze::WALL && pc != DOOR)
+				player.walkRight();		// x++
+		}
+		else if(all == VK_LEFT || (oneChar && (c == WALK_LEFT || c == WALK_LEFT - ('a'-'A')))){
+			pc = maze[player.getY()][player.getX()-1];
+			if(pc != Maze::WALL && pc != DOOR)
+				player.walkLeft();			// x--
+		}
+            // Door opener
+		else if(oneChar && c == ACTION_BTN){ 
+    		for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
+                if(player.near((*it)->getX(), (*it)->getY(), 1) && player.findItem("key", static_cast<Key*>(*it)->id) != 0){
+                    obst.erase(it);
+					 maze[(*it)->getY()][(*it)->getX()] = Maze::PATH;
+                    break;
+                }
+		}
+
+			// ....
 		if(maze[player.getY()][player.getX()] == Maze::END){ // If goal reached
 			std::cout << "You've reached the exit!" << std::endl << "Congratulations!" << std::endl << std::endl;
 			playing = false;
@@ -124,7 +126,7 @@ void Game::checkEvents(){
 		if(maze[player.getY()][player.getX()] == Game::KEY){ // If key found
 			for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
 				if(player.getY() == (*it)->getY() && player.getX() == (*it)->getX()){ // If the key is on players location
-					 player.addItem(*it);
+					 player.addItem("key", *it);
 					 obst.erase(it);
 					 maze[player.getY()][player.getX()] = Maze::PATH;
 					 break;
@@ -136,16 +138,18 @@ void Game::checkEvents(){
 
 
 void Game::printMaze(){
-    for(int i=printing_maze.Get_height(); i > 0; i--)
-        for(int j=printing_maze.Get_width(); j > 0; j--)
-            if(player.near(j,i))
-                printing_maze[i-1][j-1] = maze[i-1][j-1];
+	for(int i=printing_maze.Get_height(); i > 0; i--)
+		for(int j=printing_maze.Get_width(); j > 0; j--)
+			if(player.near(j-1,i-1))
+				printing_maze[i-1][j-1] = maze[i-1][j-1];
+			// else
+			//     printing_maze[i-1][j-1] = Maze::PATH;
 	if(!isPlaying()) return;
 	// sets obstacles position
 	Maze m = printing_maze;
 	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++)
-        if(player.near((*it)->getX(), (*it)->getY()))
-    		m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();
+		if(player.near((*it)->getX(), (*it)->getY()))
+			m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();
 	
 	// sets the player position
 	m[player.getY()][player.getX()] = Character::TECKEN;
