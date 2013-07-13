@@ -1,12 +1,11 @@
-CPPS = main.cpp Character.cpp Game.cpp Maze/Maze.cpp Inputs.cpp Linux/Linux.cpp Obstacle.cpp
-HEADERS =       Maze/Maze.h   Inputs.h   Character.h   Game.h   Linux/Linux.h   Obstacle.h
+# Makefile
+utils = utils/GLobject.cpp utils/Matrix4.cpp utils/config.cpp utils/Data.cpp
+LIBS = -lglut -lGLEW -lGL -lGLU
 
-all: maze_game
+CPPS = Character.cpp Game.cpp Obstacle.cpp \
+			Maze/Maze.cpp
 
-maze_game: $(CPPS) $(HEADERS) 
-	g++ -o maze_game $(CPPS)
+all: a.out
 
-run: 
-	./maze_game
-LIBS = Maze/Maze.cpp Inputs.cpp Linux/Linux.cpp
-# TODO: make libs
+a.out: main.cpp $(utils) $(CPPS)
+	g++ -o a.out main.cpp $(utils) $(CPPS) $(LIBS) 

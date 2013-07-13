@@ -3,7 +3,6 @@
 #define OBSTACLE_H
 
 #include "Maze/Maze.h"
-#include "Linux/Linux.h"
 
 //  beskriver någon form av hinder i labyrinten
 class Obstacle { // Var deklarerar vi tecknet/positionen sen? i game init() funktionen!

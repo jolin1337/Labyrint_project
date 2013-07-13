@@ -1,0 +1,13 @@
+# Blender MTL File: 'hedge.blend'
+# Material Count: 1
+
+newmtl lab
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.663636 0.663636 0.663636
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Disp /home/jolin1337/floobits/share/Simple2012/blender/grass.jpg
+map_Kd /home/jolin1337/floobits/share/Simple2012/blender/grass.jpg

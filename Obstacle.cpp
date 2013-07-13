@@ -1,5 +1,6 @@
 
 #include "Obstacle.h"
+#include <stdlib.h>
 
 Obstacle::Obstacle(int x, int y, char disp):x(x), y(y), disp(disp){}
 

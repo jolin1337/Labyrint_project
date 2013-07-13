@@ -14,7 +14,7 @@ void Character::addItem(std::string type, Obstacle *item){
             items[type][static_cast<Key*>(item)->id] = item;
         //    items[type].insert(std::pair<int, Obstacle*>(static_cast<Key*>(item)->id, item));
         else 
-            throw "addItem() error, item already exists.";
+            throw CharacterException();
     }
     else
         items[type][items[type].size()] = item;
@@ -51,8 +51,8 @@ Obstacle *Character::destroyItem(std::string type, int i){
 }
   
 
-bool Character::near(int x, int y, int marginal){
-	if((this->x-x)*(this->x-x) + (this->y-y)*(this->y-y) <= marginal*marginal)
+bool Character::isNear(int px, int py, int marginal){
+	if((x-px)*(x-px) + (y-py)*(y-py) <= marginal*marginal)
 	// if(this->x > x - marginal && this->x < x + marginal &&
 	// 	this->y > y - marginal && this->y < y + marginal)
 		return true;
