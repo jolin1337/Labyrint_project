@@ -221,8 +221,20 @@ void Game::printMaze(){
 	for(int i=printing_maze.Get_height(); i > 0; i--)
 		for(int j=printing_maze.Get_width(); j > 0; j--)
 				if(printing_maze[i-1][j-1] == Maze::WALL){
-					Matrix4 model = Matrix4().Translate(Vector3(-(j-1)*3, 0, -(i-1)*3)).Scale(Vector3(0.2,0.2,0.2));
-					if(i-1 > 0 && i < maze.Get_height() && maze[i][j-1] == Maze::WALL && maze[i-2][j-1] == Maze::WALL)
+					Matrix4 model = Matrix4().Translate(Vector3(-(j-1)*3, 0, -(i-1)*3)).Scale(Vector3(0.39,0.39,0.39));
+					if(i-1 > 0 && i < maze.Get_height()){
+						if( j-1 > 0 && j < maze.Get_height() && 
+							  (maze[i][j-1] == Maze::WALL || maze[i-2][j-1] == Maze::WALL) && 
+							  (maze[i-1][j] == Maze::WALL || maze[i-1][j-2] == Maze::WALL)){
+							Matrix4 m_transform = projection * view * model;
+							glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+							primitive_wall.render();
+							model.RotateA(90.0f, Vector3(0,1,0));
+						}
+						else if(maze[i][j-1] == Maze::WALL || maze[i-2][j-1] == Maze::WALL)
+							model.RotateA(90.0f, Vector3(0,1,0));
+					}
+					else if((i-1 > 0 && maze[i-2][j-1] == Maze::WALL) || (i < maze.Get_height() && maze[i][j-1] == Maze::WALL))
 						model.RotateA(90.0f, Vector3(0,1,0));
 					Matrix4 m_transform = projection * view * model;
 					glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
