@@ -15,144 +15,151 @@ const char 	*Game::vertexShaderFileName = "shaders/wall.v-shader",
 	//                   fungerar o
 
 Game::Game(int w, int h):playing(false) {
-	if( w < 3) return;
-	start(w,h);
+	if( w < 3) return;      // if width is too small abort
+	start(w,h);             // start the game if right configs where made
 }
 void Game::start(int w, int h){
-	if( w < 3) throw GameException("Small width");
-	if(h < 3)
+	if( w < 3) throw GameException("Small width"); // Throw exception if width is too small
+	if(h < 3)           // if height is too small height will become the value of width
 		h = w;
 
-    maze.Create_maze(w,h);
-	printing_maze = maze;
+    maze.Create_maze(w,h);  // generate maze
+	printing_maze = maze;   // the visible maze
 	for(int i=printing_maze.Get_height()-1; i > 1; i--)
 		for(int j=printing_maze.Get_width()-1; j > 1; j--)
-			printing_maze[i-1][j-1] = ' ';
-	init();
+			printing_maze[i-1][j-1] = ' ';  // clear maze
+	init();                 // initialize components to render
 }
 
 Game::~Game(){
 	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++)
-		delete *it;
-	Obstacle *ob;
+		delete *it;         // delete all obstacles
+	Obstacle *ob;           // for all items in player
 	while((ob = player.destroyItem("key")) != 0)
-		delete ob;
+		delete ob;          // delete ob key
 }
 
 int Game::init() {
-	// sätter till ett spelbart läge
+	// sets to playing state
 	playing = true;
 
-
+    bool status = 0;
 	try{
+        // load object file to memory
 		primitive_wall.loadObj("models/wall.obj");
 		// primitive_wall.setScale(Vector3(0.5,0.5,0.5));
 
+        // sets the opengl buffers for rendering for a signle wall
 		setupBuffers(primitive_wall);
-		Uniform u("m_transform");
-		Attribute a1("position"),
-				  // a2("texcoord"), 
-				  a3("color"),
-				  a4("normal");
+        
+        // uniform that will be used in the shader 
+		Uniform u("m_transform");   
+		Attribute a1("position"),   // position that will represent all the vercies
+				  // a2("texcoord"), // textures uppcomming TODOS
+				  a3("color"),      // color of the object that was loaded
+				  a4("normal");     // normal attribute
+                  
+        // Adds all the uniforms and attributes for this wall-object 
 		primitive_wall.addUniform(u);
 		primitive_wall.addAttribute(a1);
 		// primitive_wall.addAttribute(a2);
 		primitive_wall.addAttribute(a3);
 		primitive_wall.addAttribute(a4);
-		return primitive_wall.loadShaders(vertexShaderFileName, fragmentShaderFileName);
+        
+        // load v-shader and f-shader to a program and bind to our properties
+		status = primitive_wall.loadShaders(vertexShaderFileName, fragmentShaderFileName);
+        if(status != 1)
+            return status;
 	}catch(int i){
+        // this will happend when some files can't be found
 		std::cout << "Failed to start the game" << std::endl;
 		playing = false;
 		return 0;
 	}
-
+    // generate obstacles
 	createObstacles();
-	return 1;
+	return status;
 }
 void Game::createObstacles() {
-	if(obst.size())
+	if(obst.size())     // if already created obstacles abort!
 		return;
-	// initiera obstacles här:
-	Maze solved = maze;
-	Obstacle *door = new Door(-1,-1, DOOR), *key = new Key(-1,-1, KEY);
+        
+	// instantiate obstacles here:
+	Maze solved = maze;         // the solved maze of the generated one
+	Obstacle *door = new Door(-1,-1, DOOR), // a door obstacle
+             *key = new Key(-1,-1, KEY);    // a key item
 	Obstacle::generateObstacle(solved, door, key);
 	
+    // if we sucessfully generated a key and a door
 	if(door->getX() > -1 && door->getY() > -1 && key->getX() > -1 && key->getY() > -1){
-		((Door*)door)->id = ((Key*)key)->id = obst.size()+1;
-		obst.push_back(door);
-		obst.push_back(key);
+		((Door*)door)->id = ((Key*)key)->id = obst.size()+1; // set a id to both so that this key will lead to this door
+		obst.push_back(door);   // add door
+		obst.push_back(key);    // add key
+        
+        // set the door and key to maze
 		maze[door->getY()][door->getX()] = DOOR;
 		maze[key->getY()][key->getX()] = KEY;
 	}
 }
 
 bool Game::isPlaying() const {
-	return playing;
+	return playing; // are we still playing?
 }
 
 void Game::checkEvents(unsigned char key){
 	unsigned char &c = key;
-	/*if(!isPlaying()) return;
-#ifndef _WIN32
-	keyboard k;
-	int c = k.getch();			// väntar på input från playern
-	std::string all="";
-	all+=c;
-	while(k.kbhit())		// for clearing the buffer
-		all += k.getch();
-#else
-	int c = _getch();    		// väntar på input från playern
-	std::string all="";
-	all+=c;
-	while(kbhit())		// for clearing the buffer
-		all += getch();
-#endif*/
+    
 	try{
-		bool oneChar = true;
+		bool oneChar = true;            // this will indicate if it is a special key or not
 		char pc;                        // position character (pc)
-		if(oneChar && c == 27)
+		if(oneChar && c == 27)          // escape key was pressed
 			playing = false;
-		else if(oneChar && (c == WALK_UP || c == WALK_UP - ('a'-'A'))){
-			pc = maze[player.getY()-1][player.getX()];
-			if(pc != Maze::WALL && pc != DOOR)
-				player.walkUp();			// y--
+		else if(oneChar && (c == WALK_UP || c == WALK_UP - ('a'-'A'))){ // up key was pressed
+			pc = maze[player.getY()-1][player.getX()];          // get position char
+			if(pc != Maze::WALL && pc != DOOR)                  // if pc is a walkable char
+				player.walkUp();			                    // y--
 		}
-		else if(oneChar && (c == WALK_DOWN || c == WALK_DOWN - ('a'-'A'))){
-			pc = maze[player.getY()+1][player.getX()];
-			if(pc != Maze::WALL && pc != DOOR)
-				player.walkDown();		// y++
+		else if(oneChar && (c == WALK_DOWN || c == WALK_DOWN - ('a'-'A'))){// down key was pressed
+			pc = maze[player.getY()+1][player.getX()];          // get position char
+			if(pc != Maze::WALL && pc != DOOR)                  // if pc is walkable char
+				player.walkDown();	                        	// y++
 		}
-		else if(oneChar && (c == WALK_RIGHT || c == WALK_RIGHT - ('a'-'A'))) {
-			pc = maze[player.getY()][player.getX()+1];
-			if(pc != Maze::WALL && pc != DOOR)
-				player.walkRight();		// x++
+		else if(oneChar && (c == WALK_RIGHT || c == WALK_RIGHT - ('a'-'A'))) {// right key was pressed
+			pc = maze[player.getY()][player.getX()+1];          // get position char
+			if(pc != Maze::WALL && pc != DOOR)                  // if pc is walkable char
+				player.walkRight();		                        // x++
 		}
-		else if(oneChar && (c == WALK_LEFT || c == WALK_LEFT - ('a'-'A'))){
-			pc = maze[player.getY()][player.getX()-1];
-			if(pc != Maze::WALL && pc != DOOR)
-				player.walkLeft();			// x--
+		else if(oneChar && (c == WALK_LEFT || c == WALK_LEFT - ('a'-'A'))){// left key was pressed
+			pc = maze[player.getY()][player.getX()-1];          // get position char
+			if(pc != Maze::WALL && pc != DOOR)                  // if pc is walkable char
+				player.walkLeft();			                    // x--
 		}
             // Door opener
-		else if(oneChar && c == ACTION_BTN){ 
+		else if(oneChar && c == ACTION_BTN){                    // action button (ie space)
+            // search for near obstacles
     		for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
                 if(player.isNear((*it)->getX(), (*it)->getY(), 1) && player.findItem("key", static_cast<Key*>(*it)->id) != 0){
-                    obst.erase(it);
-					maze[(*it)->getY()][(*it)->getX()] = Maze::PATH;
+                    // door-obstacle detected with same id as some of the keys in player-bag
+                    obst.erase(it); // make the player open the door
+					maze[(*it)->getY()][(*it)->getX()] = Maze::PATH; // clean the key position form maze
                     break;
                 }
 		}
 
 			// ....
 		if(maze[player.getY()][player.getX()] == Maze::END){ // If goal reached
-			std::cout << "You've reached the exit!" << std::endl << "Congratulations!" << std::endl << std::endl;
-			playing = false;
+			std::cout << "You've reached the exit!" << std::endl << "Congratulations!" << std::endl << std::endl; // send message!
+            // TODO: send opengl gui message here:
+			playing = false;    // set playing state to false
 		}
 		if(maze[player.getY()][player.getX()] == Game::KEY){ // If key found
+            // pickup key now
 			for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
 				if(player.getY() == (*it)->getY() && player.getX() == (*it)->getX()){ // If the key is on players location
-					 player.addItem("key", *it);
-					 obst.erase(it);
-					 maze[player.getY()][player.getX()] = Maze::PATH;
+                     Obstacle *k = *it;
+    				 obst.erase(it);
+					 player.addItem("key", k); // add the key to players item(s)
+					 maze[player.getY()][player.getX()] = Maze::PATH; // clean key position from maze
 					 break;
 				}
 		}
@@ -189,9 +196,9 @@ void Game::idle(){
 void Game::printMaze(){
 	if(!isPlaying()) return;
 
-	static Matrix4 view = Matrix4().lookAt( Vector3(-10.5, 60.0, -10.0), 		// eye position
-				   							Vector3(-10.0, 0.0, -10.0), 	// focus point
-				   							Vector3(0.0, 0.0, 1.0) ),	// up direction
+	Matrix4 view = Matrix4().lookAt( Vector3(-player.getX(), 10.0f, -player.getY()), 		// eye position
+				   							Vector3(-player.getX(), 0.0f, -player.getY()), 			// focus point
+				   							Vector3(0.0, 0.0, 1.0) ),								// up direction
 					projection = Matrix4().Perspective(45.0f, // fov
 														1.0f, // aspect ratio
 														1.0f, // z-near
@@ -221,27 +228,27 @@ void Game::printMaze(){
 	for(int i=printing_maze.Get_height(); i > 0; i--)
 		for(int j=printing_maze.Get_width(); j > 0; j--)
 				if(printing_maze[i-1][j-1] == Maze::WALL){
-					Matrix4 model = Matrix4().Translate(Vector3(-(j-1)*3, 0, -(i-1)*3)).Scale(Vector3(0.39,0.39,0.39));
-					if(i-1 > 0 && i < maze.Get_height()){
-						if( j-1 > 0 && j < maze.Get_height() && 
-							  (maze[i][j-1] == Maze::WALL || maze[i-2][j-1] == Maze::WALL) && 
-							  (maze[i-1][j] == Maze::WALL || maze[i-1][j-2] == Maze::WALL)){
-							Matrix4 m_transform = projection * view * model;
-							glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
-							primitive_wall.render();
-							model.RotateA(90.0f, Vector3(0,1,0));
-						}
-						else if(maze[i][j-1] == Maze::WALL || maze[i-2][j-1] == Maze::WALL)
-							model.RotateA(90.0f, Vector3(0,1,0));
-					}
-					else if((i-1 > 0 && maze[i-2][j-1] == Maze::WALL) || (i < maze.Get_height() && maze[i][j-1] == Maze::WALL))
+					Matrix4 model = Matrix4().Translate(Vector3(-(j-1), 0, -(i-1))).Scale(Vector3(0.2,0.2,0.2));
+					bool up =  (i-1 > 0 && maze[i-2][j-1] == Maze::WALL),
+						 left= (j-1 > 0 && maze[i-1][j-2] == Maze::WALL),
+						 down= (i < maze.Get_height() && maze[i][j-1] == Maze::WALL),
+						 right=(j < maze.Get_width() && maze[i-1][j] == Maze::WALL);
+
+					if((up && (left || right)) || (down && (left || right))){
+						Matrix4 m_transform = projection * view * model;
+						glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+						primitive_wall.render();
 						model.RotateA(90.0f, Vector3(0,1,0));
+					}
+					else if(down || up)
+						model.RotateA(90.0f, Vector3(0,1,0));
+
 					Matrix4 m_transform = projection * view * model;
 					glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
 					primitive_wall.render();
 				}
 
-		Matrix4 model = Matrix4().Translate(Vector3(-player.getX()*3, 0, -player.getY()*3)).Scale(Vector3(0.1,0.1,0.1));
+		Matrix4 model = Matrix4().Translate(Vector3(-player.getX(), 0, -player.getY())).Scale(Vector3(0.1,0.1,0.1));
 		
 		Matrix4 m_transform = projection * view * model;
 		glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
