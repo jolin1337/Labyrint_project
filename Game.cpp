@@ -3,11 +3,11 @@
 #include <iostream>
 #include "setup.h"
 
+#include "Environment.h"
+
 
 const char 	*Game::vertexShaderFileName = "shaders/wall.v-shader", 
 			*Game::fragmentShaderFileName = "shaders/wall.f-shader";
-	// const char Game::WALK_UP='w', Game::WALK_DOWN='s', Game::WALK_LEFT='a', Game::WALK_RIGHT='d', Game::ACTION_BTN=VK_SPACEBAR;
-	// const char Game::KEY=':', Game::DOOR='o'; // detta blir ett ö tillsammans, tyckte jag var fyndigt :D
 	// Möjlig nyckel: fungerar u, 
 	//                fungerar F
 	// Möjlig dörr:   fungerar E, 
@@ -19,15 +19,17 @@ Game::Game(int w, int h):playing(false) {
 	start(w,h);             // start the game if right configs where made
 }
 void Game::start(int w, int h){
-	if( w < 3) throw GameException("Small width"); // Throw exception if width is too small
+	if( w < 3) throw GameException("Small width @24"); // Throw exception if width is too small
 	if(h < 3)           // if height is too small height will become the value of width
-		h = w;
+		h = w;			// set height to width instead
 
     maze.Create_maze(w,h);  // generate maze
 	printing_maze = maze;   // the visible maze
+
+	  // clear the entire maze
 	for(int i=printing_maze.Get_height()-1; i > 1; i--)
 		for(int j=printing_maze.Get_width()-1; j > 1; j--)
-			printing_maze[i-1][j-1] = ' ';  // clear maze
+			printing_maze[i-1][j-1] = ' ';	// clear to space
 	init();                 // initialize components to render
 }
 
@@ -45,12 +47,14 @@ int Game::init() {
 
     bool status = 0;
 	try{
-        // load object file to memory
-		primitive_wall.loadObj("models/wall.obj");
-		// primitive_wall.setScale(Vector3(0.5,0.5,0.5));
+        // load object files to memory
+		primitiv_wall.loadObj("models/wall.obj");
+		primitiv_key.loadObj("models/key.obj");
+		// primitiv_wall.setScale(Vector3(0.5,0.5,0.5));
 
-        // sets the opengl buffers for rendering for a signle wall
-		setupBuffers(primitive_wall);
+        // sets the opengl buffers for rendering the primitives
+		setupBuffers(primitiv_wall);
+		setupBuffers(primitiv_key);
         
         // uniform that will be used in the shader 
 		Uniform u("m_transform");   
@@ -59,25 +63,32 @@ int Game::init() {
 				  a3("color"),      // color of the object that was loaded
 				  a4("normal");     // normal attribute
                   
-        // Adds all the uniforms and attributes for this wall-object 
-		primitive_wall.addUniform(u);
-		primitive_wall.addAttribute(a1);
-		// primitive_wall.addAttribute(a2);
-		primitive_wall.addAttribute(a3);
-		primitive_wall.addAttribute(a4);
+        // Add all the uniforms and attributes for this wall-object 
+		primitiv_wall.addUniform(u);
+		primitiv_wall.addAttribute(a1);
+		primitiv_wall.addAttribute(a3);
+		primitiv_wall.addAttribute(a4);
+
+        // Add all the uniforms and attributes for this key-object 
+		primitiv_key.addUniform(u);
+		primitiv_key.addAttribute(a1);
+		primitiv_key.addAttribute(a3);
+		primitiv_key.addAttribute(a4);
         
-        // load v-shader and f-shader to a program and bind to our properties
-		status = primitive_wall.loadShaders(vertexShaderFileName, fragmentShaderFileName);
-        if(status != 1)
-            return status;
+        // load vertex-shader and fragment-shader to a program and bind to our properties
+		status = primitiv_wall.loadShaders(vertexShaderFileName, fragmentShaderFileName) && 
+				 primitiv_key.loadShaders(vertexShaderFileName, fragmentShaderFileName);
+        if(status != 1) // if loadshaders failed to load
+            return status; // abort
+
+	    // generate obstacles
+		createObstacles();
 	}catch(int i){
         // this will happend when some files can't be found
 		std::cout << "Failed to start the game" << std::endl;
 		playing = false;
 		return 0;
 	}
-    // generate obstacles
-	createObstacles();
 	return status;
 }
 void Game::createObstacles() {
@@ -99,38 +110,38 @@ void Game::createObstacles() {
         // set the door and key to maze
 		maze[door->getY()][door->getX()] = DOOR;
 		maze[key->getY()][key->getX()] = KEY;
+		std::cout << "Created obstacles...\n";
 	}
 }
 
 bool Game::isPlaying() const {
 	return playing; // are we still playing?
 }
-
-void Game::checkEvents(unsigned char key){
+ 
+void Game::checkEvents(unsigned char key, bool oneChar){
 	unsigned char &c = key;
     
 	try{
-		bool oneChar = true;            // this will indicate if it is a special key or not
 		char pc;                        // position character (pc)
 		if(oneChar && c == 27)          // escape key was pressed
 			playing = false;
-		else if(oneChar && (c == WALK_UP || c == WALK_UP - ('a'-'A'))){ // up key was pressed
-			pc = maze[player.getY()-1][player.getX()];          // get position char
+		else if((!oneChar && c == GLUT_KEY_UP) || (oneChar && (c == WALK_UP || c == WALK_UP - ('a'-'A')))){ // up key was pressed
+			pc = maze[(int)(player.getY()-Character::stepSize)][(int)player.getX()];          // get position char
 			if(pc != Maze::WALL && pc != DOOR)                  // if pc is a walkable char
 				player.walkUp();			                    // y--
 		}
-		else if(oneChar && (c == WALK_DOWN || c == WALK_DOWN - ('a'-'A'))){// down key was pressed
-			pc = maze[player.getY()+1][player.getX()];          // get position char
+		else if((!oneChar && c == GLUT_KEY_DOWN) || (oneChar && (c == WALK_DOWN || c == WALK_DOWN - ('a'-'A')))){// down key was pressed
+			pc = maze[(int)(player.getY()+Character::stepSize)][(int)player.getX()];          // get position char
 			if(pc != Maze::WALL && pc != DOOR)                  // if pc is walkable char
 				player.walkDown();	                        	// y++
 		}
-		else if(oneChar && (c == WALK_RIGHT || c == WALK_RIGHT - ('a'-'A'))) {// right key was pressed
-			pc = maze[player.getY()][player.getX()+1];          // get position char
+		else if((!oneChar && c == GLUT_KEY_RIGHT) || (oneChar && (c == WALK_RIGHT || c == WALK_RIGHT - ('a'-'A')))) {// right key was pressed
+			pc = maze[(int)player.getY()][(int)(player.getX()+Character::stepSize)];          // get position char
 			if(pc != Maze::WALL && pc != DOOR)                  // if pc is walkable char
 				player.walkRight();		                        // x++
 		}
-		else if(oneChar && (c == WALK_LEFT || c == WALK_LEFT - ('a'-'A'))){// left key was pressed
-			pc = maze[player.getY()][player.getX()-1];          // get position char
+		else if((!oneChar && c == GLUT_KEY_LEFT) || (oneChar && (c == WALK_LEFT || c == WALK_LEFT - ('a'-'A')))){// left key was pressed
+			pc = maze[(int)player.getY()][(int)(player.getX()-Character::stepSize)];          // get position char
 			if(pc != Maze::WALL && pc != DOOR)                  // if pc is walkable char
 				player.walkLeft();			                    // x--
 		}
@@ -147,19 +158,19 @@ void Game::checkEvents(unsigned char key){
 		}
 
 			// ....
-		if(maze[player.getY()][player.getX()] == Maze::END){ // If goal reached
+		if(maze[(int)player.getY()][(int)player.getX()] == Maze::END){ // If goal reached
 			std::cout << "You've reached the exit!" << std::endl << "Congratulations!" << std::endl << std::endl; // send message!
             // TODO: send opengl gui message here:
 			playing = false;    // set playing state to false
 		}
-		if(maze[player.getY()][player.getX()] == Game::KEY){ // If key found
+		if(maze[(int)player.getY()][(int)player.getX()] == Game::KEY){ // If key found
             // pickup key now
 			for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
-				if(player.getY() == (*it)->getY() && player.getX() == (*it)->getX()){ // If the key is on players location
+				if((int)player.getY() == (*it)->getY() && (int)player.getX() == (*it)->getX()){ // If the key is on players location
                      Obstacle *k = *it;
     				 obst.erase(it);
 					 player.addItem("key", k); // add the key to players item(s)
-					 maze[player.getY()][player.getX()] = Maze::PATH; // clean key position from maze
+					 maze[(int)player.getY()][(int)player.getX()] = Maze::PATH; // clean key position from maze
 					 break;
 				}
 		}
@@ -167,68 +178,45 @@ void Game::checkEvents(unsigned char key){
 	catch(std::exception &e){}
 }
 void Game::idle(){
-	// static Matrix4 model = Matrix4().Translate(Vector3(0.0, 0.0, 0.0)),
-	// 			   view = Matrix4().lookAt( Vector3(0.0, 10.0, 3.0), 		// eye position
-	// 			   							Vector3(0.0, 0.0, 0.0), 	// focus point
-	// 			   							Vector3(0.0, 1.0, 0.0) ),	// up direction
-	// 				projection = Matrix4().Perspective(45.0f, 1.0f, 0.1f, 50.0f);
 
-	// int time_ = glutGet(GLUT_ELAPSED_TIME);
-	// float angle = time_ / 1000.0 * 10;
-
-	// primitive_wall.updateElement();
-
-	// Matrix4 anim = Matrix4().RotateA(angle*3.0f, Vector3(1, 0, 0)) * 	// X axis
-	// 				Matrix4().RotateA(angle*2.0f, Vector3(0, 1, 0)) *	// Y axis
-	// 				Matrix4().RotateA(angle*4.0f, Vector3(0, 0, 1));	// Z axis
-
-
-	// Matrix4 m_transform = projection * view * model * anim;
-	// //m_transform.Scale(Vector3(1.4,1.4,1.4));
-
-	// glUseProgram(primitive_wall.getProgram());
-
-	// glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
-
+	// TODO: update key movements
+	// TODO: update animations
 	glutPostRedisplay();
 }
 
 void Game::printMaze(){
 	if(!isPlaying()) return;
 
-	Matrix4 view = Matrix4().lookAt( Vector3(-player.getX(), 10.0f, -player.getY()), 		// eye position
+	Matrix4 view = Matrix4().lookAt( Vector3(-player.getX(), 10.0f, -player.getY()), 				// eye position
 				   							Vector3(-player.getX(), 0.0f, -player.getY()), 			// focus point
 				   							Vector3(0.0, 0.0, 1.0) ),								// up direction
-					projection = Matrix4().Perspective(45.0f, // fov
-														1.0f, // aspect ratio
-														1.0f, // z-near
-														200.0f//z-far
+					projection = Matrix4().Perspective(45.0f, 										// fov
+														(float)Environment::screen_width / (float)Environment::screen_height, // aspect ratio
+														1.0f, 										// z-near
+														200.0f										//z-far
 													);
 
 	// Add all walls that will be rendered
 	for(int i=printing_maze.Get_height(); i > 0; i--)
 		for(int j=printing_maze.Get_width(); j > 0; j--)
-			if(player.isNear(j-1,i-1))
-				printing_maze[i-1][j-1] = maze[i-1][j-1];
+			if(player.isNear(j-1,i-1))		// if character is near this position
+				printing_maze[i-1][j-1] = maze[i-1][j-1];// show this position
 			// else
-			//     printing_maze[i-1][j-1] = Maze::PATH;
+			//     printing_maze[i-1][j-1] = ' ';	// hide position
 	
 	
 	// sets obstacles position
 	Maze m = printing_maze;
 	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++)
 		if(player.isNear((*it)->getX(), (*it)->getY()))
-			m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();
-	
-	// // sets the player position
-	// m[player.getY()][player.getX()] = Character::TECKEN;
+			m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();	// render obstacle if character is near
 
-	// TODO: Print maze:
-	glUseProgram(primitive_wall.getProgram());
 	for(int i=printing_maze.Get_height(); i > 0; i--)
 		for(int j=printing_maze.Get_width(); j > 0; j--)
 				if(printing_maze[i-1][j-1] == Maze::WALL){
-					Matrix4 model = Matrix4().Translate(Vector3(-(j-1), 0, -(i-1))).Scale(Vector3(0.2,0.2,0.2));
+					glUseProgram(primitiv_wall.getProgram());				// use program of the wall
+					
+					Matrix4 model = Matrix4().Translate(Vector3(-(j-1)-0.5f, 0, -(i-1)-0.5f)).Scale(Vector3(0.2,0.2,0.2));
 					bool up =  (i-1 > 0 && maze[i-2][j-1] == Maze::WALL),
 						 left= (j-1 > 0 && maze[i-1][j-2] == Maze::WALL),
 						 down= (i < maze.Get_height() && maze[i][j-1] == Maze::WALL),
@@ -236,23 +224,36 @@ void Game::printMaze(){
 
 					if((up && (left || right)) || (down && (left || right))){
 						Matrix4 m_transform = projection * view * model;
-						glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
-						primitive_wall.render();
+						glUniformMatrix4fv(primitiv_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+						primitiv_wall.render();
 						model.RotateA(90.0f, Vector3(0,1,0));
 					}
 					else if(down || up)
 						model.RotateA(90.0f, Vector3(0,1,0));
 
 					Matrix4 m_transform = projection * view * model;
-					glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
-					primitive_wall.render();
+					glUniformMatrix4fv(primitiv_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+					primitiv_wall.render();
+				}
+				else if(printing_maze[i-1][j-1] == KEY){
+					glUseProgram(primitiv_key.getProgram());				// use program of the key
+					Matrix4 model = Matrix4().Translate(Vector3(-(j-1)-0.5f, 0, -(i-1)-0.5f)).Scale(Vector3(0.2,0.2,0.2));
+
+					Matrix4 m_transform = projection * view * model;
+					glUniformMatrix4fv(primitiv_key.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+					primitiv_key.render();
 				}
 
 		Matrix4 model = Matrix4().Translate(Vector3(-player.getX(), 0, -player.getY())).Scale(Vector3(0.1,0.1,0.1));
 		
 		Matrix4 m_transform = projection * view * model;
-		glUniformMatrix4fv(primitive_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
-		primitive_wall.render();
+		glUniformMatrix4fv(primitiv_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+		primitiv_wall.render();
+
+		model.RotateA(90.0f, Vector3(0,1,0));
+		m_transform = projection * view * model;
+		glUniformMatrix4fv(primitiv_wall.getUniform("m_transform"), 1, GL_FALSE, m_transform.getMatrix4());
+		primitiv_wall.render();
 	glUseProgram(0);
 	glPushMatrix();
 

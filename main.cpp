@@ -1,175 +1,103 @@
-#include <stdio.h>
 #include <GL/glew.h>
 #include <GL/glut.h>
 
-#include "Game.h"
+#include <iostream>
 
-/*
-Vector poses[4] = {
-	Vector(1, 0),
-	Vector(0, 2),
-	Vector(0, 3),
-	Vector(1, 2)
-};
+#include "Environment.h"
 
-BlockSet4 block(poses);*/
+/**
+ * init_resources, inits the needed resources for the game ie start the game and let the game handle the resources
+ * @return 0 on fail and 1 on success
+ */
+int init_resources();
 
-Game game;
-GLint screen_width = 600, screen_height = 600;
-bool isFullscreen = false,
-	 keys[256];
-
-int init_resources(){
-	glMatrixMode(GL_PROJECTION);
-	gluPerspective( 45.0,	// fov
-					(float)screen_width / (float)screen_height,	// aspect ratio
-					1.0, 	// z near
-					200.0 	// z far
-	);
-	glMatrixMode(GL_MODELVIEW);
-	gluLookAt(0.0, 3.0, 6.0,	// eye 
-		0.0, 0.0, 0.0,			// center 
-		0.0, 1.0, 0.0);			// up direction 
-
-
-	// Lights:
-	GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-	glShadeModel (GL_SMOOTH);
-
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_DEPTH_TEST);
-
-	game.start(10,10);
-
-	return game.isPlaying();
-}
-
+/**
+ * onReshape is called when the window reshapes by user
+ * @param width  represents the new width of the window
+ * @param height represents the new height of the window
+ */
 void onReshape(int width, int height);
+/**
+ * updates the game on every frame
+ */
 void idle();
+/**
+ * draw screen image of the game when needed
+ */
 void onDisplay();
 
+/**
+ * onMouseMove is called when the mouse is moving
+ * @param x represents the x coordinate of the mouse
+ * @param y represents the y coordinate of the mouse
+ */
 void onMouseMove(int x, int y);
 
+/**
+ * onKeyDown is called when a characterkey is pressed
+ * @param Key the pressed key
+ * @param x   current mouse x-coordinate
+ * @param y   current mouse y-coordinate
+ */
 void onKeyDown(unsigned char Key, int x, int y);
+/**
+ * onKeyUp is called when a characterkey is released
+ * @param Key the key released
+ * @param x   current mouse x-coordinate
+ * @param y   current mouse y-coordinate
+ */
 void onKeyUp(unsigned char Key, int x, int y);
 
 void onKeyDownSpecial(int Key, int x, int y);
 void onKeyUpSpecial(int Key, int x, int y);
+int start_openGL(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH);
-	glutInitWindowSize(screen_width, screen_height);
-	glutCreateWindow("TITLES: KESO");
+	return start_openGL(argc, argv);
+}
+
+
+int start_openGL(int argc, char *argv[]) {
+	glutInit(&argc, argv);// glut initialise something so that rendering will be enababled
+	glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH);// tell glut how to render output: rgba colorsm alpha channel, double buffers for smooth rendering, stores the depth in the render of polygons etc..
+	glutInitWindowSize(Environment::screen_width, Environment::screen_height); // sets the default window size
+	glutCreateWindow("Maze Game Johannes and Marcus");               // create a window with a title
 
 	// Extension wrangler initialising 
-	GLenum glew_status = glewInit();
-	if (glew_status != GLEW_OK) {
-		fprintf(stderr, "Error: %s\n", glewGetErrorString(glew_status));
+	GLenum glew_status = glewInit();    // init the extension
+	if (glew_status != GLEW_OK) {       // if not success
+		std::cerr << "Error: "<< glewGetErrorString(glew_status) << std::endl;    // error msg
 		return EXIT_FAILURE;
 	}
-	if (!GLEW_VERSION_2_0) {
-		fprintf(stderr, "Error: your graphic card does not support OpenGL 2.0\n");
+	if (!GLEW_VERSION_2_0) {            // if not right version
+		std::cerr << "Error: your graphic card does not support OpenGL 2.0\n";  // error msg
 		return 1;
 	}
 
 	// When all init functions runs without errors,
 	// the program can initialise the resources 
-	if (init_resources() == 1) {
-		// And then we can display it if everything goes OK 
-		if(isFullscreen)
-			glutFullScreen();
-		//glEnable(GL_CULL_FACE);
-		// glutSetCursor(GLUT_CURSOR_NONE);
-		glEnable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glutReshapeFunc(onReshape);
-		glutIdleFunc(idle);
-		glutDisplayFunc(onDisplay);
+	if (init_resources() == 1) {    // if we were able to init the resources
+        // Go ahead and setup the opengl-Environment::game properties
+		if(Environment::isFullscreen)    // if fullscreen will show att start
+			glutFullScreen();// set fullscreen on the window 
+		//glEnable(GL_CULL_FACE);   // draw both sides of one face
+		// glutSetCursor(GLUT_CURSOR_NONE);// make the cursor vanish
+		glEnable(GL_BLEND);         // make opengl blend-mode enabled
+		glEnable(GL_DEPTH_TEST);    // make opengl depth-test enabled
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glutReshapeFunc(onReshape); // if the window resizes onReshape will be called
+		glutIdleFunc(idle);         // idle will be called every frame
+		glutDisplayFunc(onDisplay); // onDisplay function will draw/update the screen vissually
 
-		glutPassiveMotionFunc(onMouseMove);
-		glutMotionFunc(onMouseMove);
+		glutPassiveMotionFunc(onMouseMove);// onMouseMove is called when the mouse is moving
+		glutMotionFunc(onMouseMove);       // onMouseMove is called when the mouse is moving and mouse button is down
 
-		glutKeyboardFunc(onKeyDown);
-		glutKeyboardUpFunc(onKeyUp);
-		glutSpecialFunc(onKeyDownSpecial);
+		glutKeyboardFunc(onKeyDown);        // onKeyDown will be called when a key has ben pressed
+		glutKeyboardUpFunc(onKeyUp);        // onKeyUp will be called when a key has ben released
+		glutSpecialFunc(onKeyDownSpecial);  // special keys like F1,F2...F9 and arrows etc 
 		glutSpecialUpFunc(onKeyUpSpecial);
 		
-		glutMainLoop();
+		glutMainLoop();                     // starts the main program/the window that was created
 	}
 	return 0;
-}
-
-void onReshape(int width, int height) {
-	screen_width = width;
-	screen_height = height;
-	glViewport(0, 0, screen_width, screen_height);
-	// glutWarpPointer(screen_width/2, screen_height/2);
-
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective( 45.0,	// fov
-					(float)screen_width / (float)screen_height,	// aspect ratio
-					1.0, 	// z near
-					200.0 	// z far
-	);
-	glMatrixMode(GL_MODELVIEW);
-}
-
-void idle(){
-	// glutWarpPointer(screen_width/2, screen_height/2);
-	game.idle();
-}
-
-void onDisplay() {
-	// glClearColor(1.0, 1.0, 1.0, 1.0);
-	// Clear the background as black 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-	game.printMaze();
-	// Light:
-	// GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-	// glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-	// Display the result 
-	glutSwapBuffers();
-}
-
-void onMouseMove(int x, int y){
-	float speed = 0.02;
-}
-
-void onKeyDown(unsigned char Key, int x, int y){
-	switch(Key){
-		case 27:
-			exit(0);
-			break;
-		case 'f':
-			if(isFullscreen && screen_height > 0 && screen_width > 0){
-				isFullscreen = false;
-				glutPositionWindow(0,0);
-			}
-			else{
-				glutFullScreen();
-				isFullscreen = true;
-			}
-			break;
-		default:
-			game.checkEvents(Key);
-	}
-	
-}
-void onKeyUp(unsigned char Key, int x, int y){
-}
-void onKeyDownSpecial(int Key, int x, int y){
-	keys[Key] = true;
-}
-void onKeyUpSpecial(int Key, int x, int y){
-	keys[Key] = false;
 }

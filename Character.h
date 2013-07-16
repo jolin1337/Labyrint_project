@@ -14,23 +14,24 @@ public:
 		}
 	};
     static const char TECKEN;
+	static const float stepSize;
     Character();
 	Character & walkUp();
 	Character & walkDown();
 	Character & walkLeft();
 	Character & walkRight();
 
-	int getX() const{return x;}
-	int getY() const{return y;}
+	float getX() const{return x;}
+	float getY() const{return y;}
     void addItem(std::string type, Obstacle *item);
     Obstacle *findItem(std::string type, int i);
     Obstacle *destroyItem(std::string type, int i=-1);
     
-    bool isNear(int px, int py, int marginal=3);
+    bool isNear(float px, float py, float marginal=3);
     
 private:
     Items items;
-	int x,y;	// positions, a coordinate to describe the characters current position
+	float x,y;	// positions, a coordinate to describe the characters current position
 };
 
 #endif

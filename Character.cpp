@@ -2,8 +2,9 @@
 #include "Character.h"
 
 const char Character::TECKEN = 'T';
+const float Character::stepSize = 0.2;
 
-Character::Character():x(1),y(1) {
+Character::Character():x(1.5),y(1.5) {
 
 }
 //typedef std::map<std::string, std::map<int, Obstacles *> > Items;
@@ -51,7 +52,7 @@ Obstacle *Character::destroyItem(std::string type, int i){
 }
   
 
-bool Character::isNear(int px, int py, int marginal){
+bool Character::isNear(float px, float py, float marginal){
 	if((x-px)*(x-px) + (y-py)*(y-py) <= marginal*marginal)
 	// if(this->x > x - marginal && this->x < x + marginal &&
 	// 	this->y > y - marginal && this->y < y + marginal)
@@ -61,20 +62,20 @@ bool Character::isNear(int px, int py, int marginal){
 
 Character & Character::walkUp(){
 	if(y>0)
-		y--;
+		y-=stepSize;
 	return *this;
 }
 Character & Character::walkDown(){
-	y++;
+	y+=stepSize;
 	return *this;
 }
 Character & Character::walkLeft(){
 	if(x>0)
-		x--;
+		x-=stepSize;
 	return *this;
 }
 Character & Character::walkRight(){
-	x++;
+	x+=stepSize;
 	return *this;
 }
 
