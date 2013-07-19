@@ -1,5 +1,5 @@
 Lista på vad som behöver göras:
-		I terminalen/consolen:
+    I terminalen/consolen:
 
   - rendering ska bara göras inom konsolens boundaries med centrering på spelarens karakrät väldigt koolt resultat + att det inte är jättesvårt att fixa
         > vi måste ta reda på hur c++ kan veta dimmensionerna av consolefönstret // Fixat i "ConsoleDimensions.cpp"
@@ -8,19 +8,18 @@ Lista på vad som behöver göras:
             Annvända SMALL_RECT i Linux/Linux.h och mata in i Maze::print_maze
             skapa en funktion i game som genererar detta SMALL_RECT objektet.
         > alternativt istället för att ändra Maze::print_maze skulle vi kunna göra en firend funktion som skriver ut labyrinten som vi vill ha den!
-  - Möjlighet att låsa upp dörren
   - karaktärens egenskaper/properties i klass-filen
-  		PICKUP
+      PICKUP
   - hinder och items
         pickups:
-      		Coins
+          Coins
             keys
         obsticles:
             doors
 
   - En storyline??? - kanske
 
-  		Det grafiska:
+      Det grafiska:
   - Design på labyrintens olika banor
   - modeller för de karaktärer som finns/ska finnas
   - tema och layout för menyer mm
@@ -28,13 +27,12 @@ Lista på vad som behöver göras:
   
      ######## Completed ########
 - Main-loop till spelet
-  	initierar charactär och spel osv
-  	loop:
-  		[check_events
-  		print_maze
-  		updatera viktig information så som items osv]
+    initierar charactär och spel osv
+    loop:
+      [check_events
+      print_maze
+      updatera viktig information så som items osv]
           
 - Förflyttning och events som händer under spelets gång
-      	Karakrären vill flytta sig
-  		karakrären är framme vid målet
-  
+        Karakrären vill flytta sig
+      karakrären är framme vid målet

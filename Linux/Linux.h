@@ -46,7 +46,7 @@ void getDimensions(int *w, int *h);
 #define VK_RIGHT "\033[C" // D-key
 #define VK_ESCAPE 27
 #define VK_RETURN 10
-#define VK_SPACEBAR 32
+#define VK_SPACE 32
 
 // Cursor settings
 #define SAVE_CURSOR_POSITION "\033[s"

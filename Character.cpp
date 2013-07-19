@@ -14,7 +14,7 @@ void Character::addItem(std::string type, Obstacle *item){
             items[type][static_cast<Key*>(item)->id] = item;
         //    items[type].insert(std::pair<int, Obstacle*>(static_cast<Key*>(item)->id, item));
         else 
-            throw "addItem() error, item already exists.";
+            throw CharacterException();
     }
     else
         items[type][items[type].size()] = item;
@@ -44,37 +44,37 @@ Obstacle *Character::destroyItem(std::string type, int i){
     if(items[type].find(i) == items[type].end())
         return 0;
     Obstacle *destroying=items[type][i];
-	items[type].erase(i);
+    items[type].erase(i);
     if(items[type].size() == 0)
         items.erase(type);
-	return destroying;
+    return destroying;
 }
   
 
-bool Character::near(int x, int y, int marginal){
-	if((this->x-x)*(this->x-x) + (this->y-y)*(this->y-y) <= marginal*marginal)
-	// if(this->x > x - marginal && this->x < x + marginal &&
-	// 	this->y > y - marginal && this->y < y + marginal)
-		return true;
+bool Character::isNear(int px, int py, int marginal){
+    if((x-px)*(x-px) + (y-py)*(y-py) <= marginal*marginal)
+    // if(this->x > x - marginal && this->x < x + marginal &&
+    //  this->y > y - marginal && this->y < y + marginal)
+        return true;
     return false;
 }
 
 Character & Character::walkUp(){
-	if(y>0)
-		y--;
-	return *this;
+    if(y>0)
+        y--;
+    return *this;
 }
 Character & Character::walkDown(){
-	y++;
-	return *this;
+    y++;
+    return *this;
 }
 Character & Character::walkLeft(){
-	if(x>0)
-		x--;
-	return *this;
+    if(x>0)
+        x--;
+    return *this;
 }
 Character & Character::walkRight(){
-	x++;
-	return *this;
+    x++;
+    return *this;
 }
 

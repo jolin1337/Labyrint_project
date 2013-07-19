@@ -1,26 +1,22 @@
 
 #include "Game.h"
 #include <iostream>
-#ifndef _WIN32
-#include "Linux/Linux.h"
+
+#ifdef __APPLE__
+#include <GLUT/glut.h>
 #else
-#include <conio.h>
+#include <GL/glut.h>
 #endif
 // const char Game::WALK_UP='w', Game::WALK_DOWN='s', Game::WALK_LEFT='a', Game::WALK_RIGHT='d', Game::ACTION_BTN=VK_SPACEBAR;
 // const char Game::KEY=':', Game::DOOR='o'; // detta blir ett ö tillsammans, tyckte jag var fyndigt :D
-// Möjlig nyckel: fungerar u, 
-//                fungerar F
-// Möjlig dörr:   fungerar E, 
-//                fungerar n,
-//                   fungerar o
+
 
 Game::Game(int w, int h):playing(false) {
-    maze.Create_maze(w,h);
-	printing_maze = maze;
-	for(int i=printing_maze.Get_height()-1; i > 1; i--)
-		for(int j=printing_maze.Get_width()-1; j > 1; j--)
-			printing_maze[i-1][j-1] = ' ';
-	
+    if(w < 3 )
+        return;
+    if(h < 3)
+        h = w;
+    start(w,h);
 }
 
 Game::~Game(){
@@ -40,16 +36,19 @@ void Game::createObstacles() {
 	if(obst.size())
 		return;
 	// initiera obstacles här:
-	Maze solved = maze;
 	Obstacle *door = new Door(-1,-1, DOOR), *key = new Key(-1,-1, KEY);
-	Obstacle::generateObstacle(solved, door, key);
+	Obstacle::generateObstacle(maze, door, key);
 	
 	if(door->getX() > -1 && door->getY() > -1 && key->getX() > -1 && key->getY() > -1){
-		((Door*)door)->id = ((Key*)key)->id = obst.size()+1;
+		static_cast<Door*>(door)->id = static_cast<Key*>(key)->id = obst.size()+1;
 		obst.push_back(door);
 		obst.push_back(key);
 		maze[door->getY()][door->getX()] = DOOR;
 		maze[key->getY()][key->getX()] = KEY;
+	}
+	else{
+		delete door;
+		delete key;
 	}
 }
 
@@ -58,15 +57,22 @@ bool Game::isPlaying() const {
 }
 
 void Game::start(int w, int h){
-	Game main_game(w,h);
+    if(w < 3)
+        throw "Error, too small dimensions!";
+    if(h < 3)
+        h = w;
+
+    maze.Create_maze(w,h);
+	printing_maze = maze;
+	for(int i=printing_maze.Get_height()-1; i > 1; i--)
+		for(int j=printing_maze.Get_width()-1; j > 1; j--)
+			printing_maze[i-1][j-1] = ' ';
+	playing = true;
 	// Här gör vi en init
-	main_game.init();
-	while(main_game.isPlaying()){
-		main_game.printMaze();			// skriv ut den färdigrenderade mazen med items props och karaktärer
-		main_game.checkEvents();		// skapa en event funktion(kanske ett objekt event inuti klassen beroende på hur komplext det blir)
-	}
+	init();
 }
 
+// depricated
 void Game::checkEvents(){
 	if(!isPlaying()) return;
 #ifndef _WIN32
@@ -77,7 +83,7 @@ void Game::checkEvents(){
 	while(k.kbhit())		// for clearing the buffer
 		all += k.getch();
 #else
-	int c = getch();    		// väntar på input från playern
+	int c = _getch();    		// väntar på input från playern
 	std::string all="";
 	all+=c;
 	while(kbhit())		// for clearing the buffer
@@ -111,9 +117,9 @@ void Game::checkEvents(){
             // Door opener
 		else if(oneChar && c == ACTION_BTN){ 
     		for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
-                if(player.near((*it)->getX(), (*it)->getY(), 1) && player.findItem("key", static_cast<Key*>(*it)->id) != 0){
+                if(player.isNear((*it)->getX(), (*it)->getY(), 1) && player.findItem("key", static_cast<Key*>(*it)->id) != 0){
                     obst.erase(it);
-					 maze[(*it)->getY()][(*it)->getX()] = Maze::PATH;
+					maze[(*it)->getY()][(*it)->getX()] = Maze::PATH;
                     break;
                 }
 		}
@@ -138,21 +144,35 @@ void Game::checkEvents(){
 
 
 void Game::printMaze(){
+	if(!isPlaying()) return;
 	for(int i=printing_maze.Get_height(); i > 0; i--)
 		for(int j=printing_maze.Get_width(); j > 0; j--)
-			if(player.near(j-1,i-1))
+			if(player.isNear(j-1,i-1))
 				printing_maze[i-1][j-1] = maze[i-1][j-1];
 			// else
 			//     printing_maze[i-1][j-1] = Maze::PATH;
-	if(!isPlaying()) return;
-	// sets obstacles position
 	Maze m = printing_maze;
-	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();it++)
-		if(player.near((*it)->getX(), (*it)->getY()))
+	// sets obstacles position
+	for(std::vector<Obstacle *>::iterator it=obst.begin(); it != obst.end();++it)
+		if(player.isNear((*it)->getX(), (*it)->getY()))
 			m[(*it)->getY()][(*it)->getX()] = (*it)->getDisp();
-	
+
 	// sets the player position
 	m[player.getY()][player.getX()] = Character::TECKEN;
-	m.Print_maze();
+	// m.Print_maze();
+    
+    // TODO: opengl stuff:
+  	glLoadIdentity();
+    gluLookAt(0,6,0,
+    		 0,0,0,
+    		 0,1,0);
+  	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glColor3f(1.0f,1.0f,1.0f);
+	
+	glBegin(GL_TRIANGLES);
+	glColor3f(   1.0,  0.0,  0.0 );
+	glVertex3f(  0.5, -0.5, -0.5 );
+	glVertex3f(  0.5, -0.5,  0.5 );
+	glEnd();
 }
 

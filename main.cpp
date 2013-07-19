@@ -7,12 +7,13 @@ int main(int argc, char const *argv[])
 	std::string choice;
 	int col, row;
 	std::cout << "\t -:: Labyrinth game ::-" << std::endl;
-	while (choice != "3"){ // Simple user interface
+	while (1){ // Simple user interface
 		std::cout 
 			<< "Choose option" << std::endl
 			<< "[1] -\t Play" << std::endl
-			<< "[2] -\t About" << std::endl
-			<< "[3] -\t Exit program" << std::endl;
+			<< "[2] -\t Instructions" << std::endl
+			<< "[3] -\t About" << std::endl
+			<< "[4] -\t Exit program" << std::endl;
 		getline(std::cin, choice);
 		std::cout << std::endl;
 		if (choice == "1"){ // play
@@ -36,12 +37,16 @@ int main(int argc, char const *argv[])
 			continue;
 		}
 		else if(choice == "2"){ // Print about message
-			std::cout << "Awesome game!" << std::endl;
+			std::cout << "How to" << std::endl;
 		}
-		else if(choice == "3") // exit
+		else if(choice == "3"){ // Print about message
+			std::cout << "Awesome game!" << std::endl;
+			std::cout << "Made by Johannes Lindén and Marcus Ekström!" << std::endl;
+		}
+		else if(choice == "4") // exit
 			return 0;
 		else
-			std::cout << "Please choose between [1], [2] and [3]." << std::endl;
+			std::cout << "Please choose between [1], [2], [3] and [4]." << std::endl;
 	}
 
 

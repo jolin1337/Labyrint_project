@@ -3,8 +3,9 @@
 #include <fstream>
 #include <cstdio> // EOF()
 #include <stdlib.h>
+#include <time.h>
 
-typedef	unsigned int Uint;
+typedef    unsigned int Uint;
 const char Maze::WALL = '#';
 const char Maze::PATH = ' ';
 const char Maze::SOLVEDPATH = '*';
@@ -212,13 +213,13 @@ bool Maze::Solve(int x, int y){
 }
 
 int Maze::getPathLength(){
-    int len = 0;
-    for(int i=0;i<Get_width();i++)
-        for(int j=0;j<Get_height();j++){
-            if(Map[j][i] == SOLVEDPATH) // Check if m[j][i] is a part of the solution
-                len++;
-        }
-    return len;
+	int len = 0;
+	for(int i=0;i<Get_width();i++)
+		for(int j=0;j<Get_height();j++){
+			if(Map[j][i] == SOLVEDPATH) // Check if m[j][i] is a part of the solution
+				len++;
+		}
+	return len;
 }
 
 bool Maze::Read_file(std::string file){
@@ -227,12 +228,12 @@ bool Maze::Read_file(std::string file){
 	std::string line;
 	std::ifstream infile(file.c_str()); //  The input file
 	if (infile.is_open()) {		// Make sure the file is open
-	    while (!infile.eof()) {	// until we're at the end of the file
-	    	std::getline(infile, line);	// Take line by line
-	    	if(line.empty())
-	    		continue;
-	    	// Push vector<char> to make it a vector<vector<char > >
-	    	Map.push_back(std::vector<char>());
+		while (!infile.eof()) {	// until we're at the end of the file
+			std::getline(infile, line);	// Take line by line
+			if(line.empty())
+				continue;
+			// Push vector<char> to make it a vector<vector<char > >
+			Map.push_back(std::vector<char>());
 			for (int i = 0; i < line.length(); i++){
 				// If invalid character found, return false and give error message.
 				if ((line[i] != WALL) && (line[i] != PATH) && (line[i] != SOLVEDPATH) && (line[i] != START) && (line[i] != END)){
@@ -241,7 +242,7 @@ bool Maze::Read_file(std::string file){
 				}
 				// Add next element
 				Map[j].push_back(line[i]);
-	    	}
+			}
 			j++;
 		}
 		infile.close();
